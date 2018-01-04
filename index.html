@@ -26,17 +26,32 @@
 
 	<body>
 		<div id="wrap">
-			<canvas id="myCanvas" width="800" height="800"></canvas>
+			<canvas id="myCanvas"></canvas>
 		    <div id="myLegend"></div>
 		</div>
 
 		
 		<script type="text/javascript">
-			var myCanvas = document.getElementById("myCanvas");
-			myCanvas.width = 300;
-			myCanvas.height = 300;
+			
+			
+			var myCanvas = document.getElementById("myCanvas");//画布
+			
+			myCanvas.width = 300;//width 指的是它坐标系的高度
+			myCanvas.height = 300;//height 指的是它坐标系的高度
 
-			var ctx = myCanvas.getContext("2d");
+					
+			var ctx = myCanvas.getContext("2d");// 绘图上下文    -> 笔 	
+			
+			
+				//创建一个画饼形图的份的函数drawPieSlice()
+				
+				//ctx:指向绘图上下文的索引
+				//centerX：圆心的X坐标
+				//centerY：圆心的Y坐标
+				//radius：圆的半径
+				//startAngle：部分圆的扇形的起始角度
+				//endAngle：部分圆的扇形的结束角度
+				//color：填充的颜色
 
 			function drawPieSlice(ctx, centerX, centerY, radius, startAngle, endAngle, color) {
 				ctx.fillStyle = color;
@@ -46,9 +61,10 @@
 				ctx.closePath();
 				ctx.fill();
 			}
-
+			//调用函数drawPieSlice()
 			drawPieSlice(ctx, 150, 150, 150, Math.PI / 2, Math.PI / 2 + Math.PI / 4, '#ff0000');
-
+            
+            //声明一个变量数组
 			var myVinyls = {
 				"中国": 960,
 				"美国": 936,
@@ -56,12 +72,29 @@
 				"日本": 230,
 				"韩国": 119,
 			};
-
+			
+			
+			//声明 PieChart函数接受options做为参数
+			//options包含以下：
+			//canvas：指向我们想要画饼状图的索引
+			//data：盛放数据模型的对象的索引
+			//colors：一个数组，数组中是每份的颜色。
+			//PieChart同时也包含一个draw()方法，它来对图表进行实际的绘制。
 			var Piechart = function(options) {
+				///PieChart函数首先将传入的options参数进行存储。 
+				//它保存了canvas的索引，同时也创建一个绘画上下文作为类成员变量。 然后它存储了options中的colors数组。
 				this.options = options;
 				this.canvas = options.canvas;
 				this.ctx = this.canvas.getContext("2d");
 				this.colors = options.colors;
+				
+				
+				//函数draw(), 它会从数据模型中提取数据,
+				//首先，它计算数据模型中所有数据值的和, 
+				//然后对其中每个类别应用上面提到的计算角度的函数,
+				//最后我们调用drawPieSlice()函数，
+				//用canvas的中心作为饼状图的中心,
+				//至于半径，我们用canvas宽度的一半与canvas高度的一半的较小值。
 
 				this.draw = function() {
 					var total_value = 0;
@@ -90,7 +123,19 @@
 						color_index++;
 					}
 					
-					start_angle = 0;
+					
+					
+					
+					
+					//添加标签
+					
+					//值标签：显示每份对应的百分比,通过100 * 每份值 / 总的值来计算，整个圆代表100%
+					//将这个值刚好显示在对应的份上面使用fillText(text, x, y)函数 
+					//fillText(text, x, y)  这个函数接受三个参数：文本和x，y坐标。
+					//x = R * cos(angle) y = R * sin(angle)
+					//应用这个公式，将文本放在饼状图的半径的一半位置与每份角度的一半位置处
+					
+					var start_angle = 0;
 					for(categ in this.options.data) {
 						val = this.options.data[categ];
 						slice_angle = 2 * Math.PI * val / total_value;
@@ -105,32 +150,43 @@
 						}
 
 						var labelText = Math.round(100 * val / total_value);
-						this.ctx.fillStyle = "white";
-						this.ctx.font = "bold 20px Arial";
+						this.ctx.fillStyle = "white";//fillStyle属性来设置文本颜色为白色
+						this.ctx.font = "bold 20px Arial";//font属性来设置标签文本的字体、样式和大小
 						this.ctx.fillText(labelText + "%", labelX, labelY);
 						start_angle += slice_angle;
 					}
+					//上面代码遍历每份，计算百分比和位置，然后调用fillText()方法将之绘制到图表上
+
+
 				}
+				
+				
 				if(this.options.legend) {
 					color_index = 0;
 					var legendHTML = "";
 					for(categ in this.options.data) {
-						legendHTML += "<div><span style='display:inline-block;width:20px;background-color:" + this.colors[color_index++] + ";'>&nbsp;</span> " + categ + "</div>";
+						legendHTML += "<div><span style='display:inline-block;margin-bottom:10px;width:20px;background-color:" + this.colors[color_index++] + ";'>&nbsp;</span> " + categ + "</div>";
 					}
 					this.options.legend.innerHTML = legendHTML;
 				}
 
 			}
-
+			
+			
+			
+			//要想使用PieChart函数，我们必须先创建一个对象，然后在创建的对象上调用draw()方法。
+			//绘制出现没有数值标示的饼形图
 			var myPiechart = new Piechart({
 				canvas: myCanvas,
 				data: myVinyls,
 				colors: ["#C20100", "#0074C1", "#7105C4","#F0D100", "#937e88"]
 			});
 			myPiechart.draw();
+			
+			
+			//创建图例
 
 			var myLegend = document.getElementById("myLegend");
-
 			var myDougnutChart = new Piechart({
 				canvas: myCanvas,
 				data: myVinyls,
